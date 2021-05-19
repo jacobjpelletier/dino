@@ -1,1 +1,427 @@
 Udacity Notes on OOP JS
+
+A. Objects in Depth
+    1. Create and modify properties
+        a. Creating objects
+            - literal notation:
+
+                const myObject = {};
+
+            - Object constructor function:
+
+                const myObject = new Object();
+
+            - To create a new, blank (i.e., “empty”) object, you can use object literal notation,
+            or the Object() constructor function.
+            - the recommended way to create new objects in JavaScript is to use literal notation.
+        b. modifying properties
+            - Keep in mind that data within objects are mutable, meaning that data can be changed. There are a few
+            exceptions to this, but for now, let's see how we can modify/reassign existing properties in an object.
+            - consider the cat object:
+
+            const cat = {
+              age: 2,
+              name: 'Bailey',
+              meow: function () {
+                console.log('Meow!');
+              },
+              greet: function (name) {
+                console.log(`Hello ${name}`);
+              }
+            };
+
+            - now lets modify:
+
+            cat.age += 1;
+            cat.age;
+            // 3
+            cat.name = 'Bambi';
+            cat.name;
+            // 'Bambi'
+
+            - cat object now looks like:
+
+            {
+              age: 3,
+              name: 'Bambi',
+              meow: function () {
+                console.log('Meow!');
+              },
+              greet: function (name) {
+                console.log(`Hello ${name}`);
+              }
+            };
+
+        c. adding properties
+            - Properties can be added to objects simply by specifying the property name, then giving it a value.
+            Let's start off with a blank object, then add two properties:
+
+            const printer = {};
+            printer.on = true;
+            printer.mode = 'black and white';
+
+            - The above example uses dot notation to add properties, but keep in mind that square bracket notation
+            works just as well:
+
+            printer['remainingSheets'] = 168;
+
+            - Likewise, we can add a method to the printer object in a similar manner. This time, the value of the
+            property is an anonymous (i.e., unnamed) function:
+
+            printer.print = function () {
+              console.log('The printer is printing!');
+            };
+
+            - printer now looks like:
+
+            {
+              on: true,
+              mode: 'black and white',
+              remainingSheets: 168,
+              print: function () {
+                console.log('The printer is printing!');
+              }
+            }
+
+        d. removing properties
+            - Recall that since objects are mutable, not only can we modify existing properties (or even add new ones)
+              we can also delete properties from objects.
+
+            - Say that the printer object above actually doesn't have any modes (i.e., 'black and white', 'color', etc.).
+              We can go ahead and remove that property from printer using the delete operator.
+
+              delete printer.mode;
+              // true
+
+            - Note that delete directly mutates the object at hand. If we try to access a deleted property, the
+            JavaScript interpreter will no longer be able to find the mode property because the mode key (along with its
+            value, true) have been deleted:
+
+                printer.mode;
+                // undefined
+
+        e. passing arguments
+            - In JavaScript, a primitive (e.g., a string, number, boolean, etc.) is immutable. In other words, any
+            changes made to an argument inside a function effectively creates a copy local to that function, and does
+            not affect the primitive outside of that function. Check out the following example:
+
+            function changeToEight(n) {
+              n = 8; // whatever n was, it is now 8... but only in this function!
+            }
+            let n = 7;
+            changeToEight(n);
+            console.log(n);
+            // 7
+
+        f. passing an object
+            - On the other hand, objects in JavaScript are mutable. If you pass an object into a function, Javascript
+            passes a reference to that object. Let's see what happens if we pass an object into a function and then
+            modify a property:
+
+            let originalObject = {
+              favoriteColor: 'red'
+            };
+            function setToBlue(object) {
+              object.favoriteColor = 'blue';
+            }
+            setToBlue(originalObject);
+            originalObject.favoriteColor;
+            // 'blue'
+
+            - How did this happen? Well, since objects in JavaScript are passed by reference, if we make changes to that
+            reference, we're actually directly modifying the original object itself!
+            - What's more: the same rule applies when re-assigning an object to a new variable, and then changing that
+            copy. Again, since objects are passed by reference, the original object is changed as well. Let's take a
+            look at this more closely with another example.
+            - Consider this iceCreamOriginal object, which shows the amount of ice cream cones each instructor has eaten:
+
+            const iceCreamOriginal = {
+              Andrew: 3,
+              Richard: 15
+            };
+
+            const iceCreamCopy = iceCreamOriginal;
+            iceCreamCopy.Richard;
+            // 15
+
+            iceCreamCopy.Richard = 99;
+            iceCreamCopy.Richard;
+            // 99
+            iceCreamOriginal.Richard;
+            // 99
+
+            - so, initially Richard has 15 ice cream. reference to original is passed to copy, and value
+            of 99 replaced copy, which also replaces original
+
+        g. Comparing an object with another object
+            - what happens when you compare one object with another?
+
+            const parrot = {
+              group: 'bird',
+              feathers: true,
+              chirp: function () {
+                console.log('Chirp chirp!');
+              }
+            };
+            const pigeon = {
+              group: 'bird',
+              feathers: true,
+              chirp: function () {
+                console.log('Chirp chirp!');
+              }
+            };
+
+            - are parrot and pigeon equal? nope
+            - What's going on here? As it turns out, the expression will only return true when comparing two references
+            to exactly the same object. Using what we now know about passing objects, let's confirm this. To start off,
+            let's create a new variable, myBird, and assign it to one of the objects above:
+
+            const myBird = parrot;
+            myBird === parrot;
+            // true
+
+        h. summary
+            - Objects are commonly created with literal notation, and can include properties that point to functions
+            called methods. Methods are accessed the same way as other properties of objects, and can be invoked the
+            same way as regular functions, except they automatically have access to the other properties of their parent
+            object.
+
+            - By default, objects are mutable (with a few exceptions), so data within them can be altered. New properties
+            can be added, and existing properties can be modified by simply specifying the property name and assigning
+            (or re-assigning) a value. Additionally, properties and methods of an object can be deleted as well with the
+            delete operator, which directly mutates the object.
+
+            - We've modified objects quite a bit in this section, and even added new methods into them. In the very next
+            section, we'll take a closer look at invoking these methods, as well as how these methods can directly access
+            and modify an object itself!
+
+    2.  Invoking Object Methods
+        a. Functions vs methods.
+            - We can add functionality to objects by adding methods to them
+
+            function sayHello () {
+              console.log('Hi there!');
+            }
+            const developer = {
+              name: 'Andrew'
+            };
+            developer.sayHello = function () {
+              console.log('Hi there!');
+            };
+            // now looks like this
+            {
+              name: 'Andrew',
+              sayHello: function () {
+                console.log('Hi there!');
+              }
+            }
+
+        b. calling methods
+            - We can access a function in an object using the property name. Again, another name for a function property
+            of an object is a method. We can access it the same way that we do with other properties: by using dot
+            notation or square bracket notation. Let's take a look back at the updated developer object above, then
+            invoke its sayHello() method:
+
+            const developer = {
+              name: 'Andrew',
+              sayHello: function () {
+                console.log('Hi there!');
+              }
+            };
+            developer.sayHello();
+            // 'Hi there!'
+            developer['sayHello']();
+            // 'Hi there!'
+
+        c. passing arguments into methods
+            - If the method takes arguments, you can proceed the same way, too:
+
+            const developer = {
+              name: 'Andrew',
+              sayHello: function () {
+                console.log('Hi there!');
+              },
+              favoriteLanguage: function (language) {
+                console.log(`My favorite programming language is ${language}`);
+              }
+            };
+            developer.favoriteLanguage('JavaScript');
+            // My favorite programming language is JavaScript'
+
+        d. call methods by property name
+            - We've been using anonymous functions (i.e., functions without a name) for object methods. However, naming
+            those functions is still valid JavaScript syntax. Consider the following object, greeter:
+
+            const greeter = {
+              greet: function sayHello() {
+                console.log('Hello!');
+              }
+            };
+
+            - Note that the greet property points to a function with a name: sayHello. Whether this function is named or
+            not, greet is invoked the same way:
+
+            greeter.greet();
+            // 'Hello!'
+
+            - Named functions are great for a smoother debugging experience, since those functions will have a useful name
+            to display in stack traces. They're completely optional, however, and you'll often read code written by
+            developers who prefer one way or the other.
+
+        e. a method can access the object it was called on
+            - Recall that an object can contain data and the means to manipulate that data. But just how can an object
+            reference its own properties, much less manipulate some of those properties itself? This is all possible
+            with the this keyword!
+
+            const triangle = {
+              type: 'scalene',
+              identify: function () {
+                console.log(`This is a ${this.type} triangle.`);
+              }
+            };
+
+        f. summary
+            -     A method is a function property of an object. It is accessed the same way as any other property of the
+            object (i.e., using dot notation or square bracket notation), and is invoked the same way as a regular
+            function outside of an object (i.e., adding parentheses to the end of the expression).
+            - Since an object is a collection of data and the means to operate on that data, a method can access the
+            object it was called on using the special this keyword. The value of this is determined when a method is
+            invoked, and its value is the object on which the method was called. Since this is a reserved word in
+            JavaScript, its value cannot be used as an identifier. Feel free to check out the links below for an
+            additional look at methods and their relationship with this.
+            - We've spent a bit of time on this inside objects, but did you know that the value of this can have
+            different meanings outside an object? In the next section, we'll take a close look at globals, their
+            relationship with this, and the implications of using them.
+
+    3. Beware of globals
+        a. Previously, we saw that the properties and methods contained inside an object belong to that object. Let's
+        drive this home with one quick example:
+
+        const chameleon = {
+          eyes: 2,
+          lookAround: function () {
+             console.log(`I see you with my ${this.eyes} eyes!`);
+          }
+        };
+        chameleon.lookAround();
+        // 'I see you with my 2 eyes!'
+
+        b. How the function is invoked determines the value of this inside the function.
+        c. When a regular function is invoked, the value of this is the global window object.
+        d. window object
+            - If you haven't worked with the window object yet, this object is provided by the browser environment and
+            is globally accessible to your JavaScript code using the identifier, window. This object is not part of the
+            JavaScript specification (i.e., ECMAScript); instead, it is developed by the W3C.
+            - This window object has access to a ton of information about the page itself, including:
+                -The page's URL (window.location;)
+                -The vertical scroll position of the page (window.scrollY')
+                -Scrolling to a new location (window.scroll(0, window.scrollY + 200); to scroll 200 pixels down from the
+                current location)
+                -Opening a new web page (window.open("https://www.udacity.com/");)
+        e. Global Variables are Properties on window
+            - Since the window object is at the highest (i.e., global) level, an interesting thing happens with global
+            variable declarations. Every variable declaration that is made at the global level (outside of a function)
+            automatically becomes a property on the window object!
+        f. Globals and var, let, and const
+            - The keywords var, let, and const are used to declare variables in JavaScript. var has been around since
+            the beginning of the language, while let and const are significantly newer additions (added in ES6).
+            - Only declaring variables with the var keyword will add them to the window object. If you declare a variable
+            outside of a function with either let or const, it will not be added as a property to the window object.
+        g. Global Functions are Methods on window
+            - Similarly to how global variables are accessible as properties on the window object, any global function
+            declarations are accessible on the window object as methods:
+
+            function learnSomethingNew() {
+              window.open('https://www.udacity.com/');
+            }
+            window.learnSomethingNew === learnSomethingNew
+            // true
+
+        h. avoid globals
+            - Counterintuitively, though, global variables and functions are not ideal. There are actually a number of
+            reasons why, but the two we'll look at are:
+
+              Tight coupling
+              Name collisions
+
+            - Tight Coupling
+                - Tight coupling is a phrase that developers use to indicate code that is too dependent on the details
+                of each other. The word "coupling" means the "pairing of two items together." In tight coupling, pieces
+                of code are joined together in a way where changing one unintentionally alters the functioning of some
+                other code:
+
+                var instructor = 'Richard';
+                function richardSaysHi() {
+                  console.log(`${instructor} says 'hi!'`);
+                }
+
+                -  If we refactored this code by changing the variable from instructor to teacher, this would break the
+                richardSaysHi() function (or we'd have to update it there, too!). This is a (simple) example of
+                tightly-coupled code.
+
+            - name collisions
+                - A name collision occurs when two (or more) functions depend on a variable with the same name. A major
+                problem with this is that both functions will try to update the variable and or set the variable, but
+                these changes are overridden by each other!
+
+                let counter = 1;
+
+                function addDivToHeader () {
+                  const newDiv = document.createElement('div');
+                  newDiv.textContent = 'div number ' + counter;
+
+                  counter = counter + 1;
+
+                  const headerSection = document.querySelector('header');
+                  headerSection.appendChild(newDiv)
+                }
+
+                function addDivToFooter() {
+                  const newDiv = document.createElement('div');
+                  newDiv.textContent = 'div number ' + counter;
+
+                  counter = counter + 1;
+
+                  const headerSection = document.querySelector('footer');
+                  headerSection.appendChild(newDiv)
+                }
+
+                - In this code, we have an addDivToHeader() function and a addDivToFooter() function. Both of these
+                functions create a <div> element and increment a counter variable.
+                - So what should you do instead? You should write as few global variables as possible. Write your
+                variables inside of the functions that need them, keeping them as close to where they are needed as
+                possible. Now, there are times when you'll need to write global variables, but you should only write
+                them as a last resort.
+
+    4. Object Methods
+        a. Do you remember earlier when we used the Object() constructor function to create (i.e., instantiate) new
+        objects with the new keyword?
+            - const myNewFancyObject = new Object();
+        b. Object.keys() and Object.values()
+            - At its core, an object is just a collection of key/value pairs. What if we want to extract only the keys
+            from an object? Say we have this object representing a real-life dictionary:
+
+            const dictionary = {
+              car: 'automobile',
+              apple: 'healthy snack',
+              cat: 'cute furry animal',
+              dog: 'best friend'
+            };
+
+            - When Object.keys() is given an object, it extracts just the keys of that object, then returns those keys
+            in an array:
+
+            Object.keys(dictionary);
+            // ['car', 'apple', 'cat', 'dog']
+
+            - So Object.keys() gives returns an array of the provided object's property names. Likewise, if we want a
+            list of the values of an object, we can use Object.values():
+
+            Object.values(dictionary);
+            // ['automobile', 'healthy snack', 'cute furry animal', 'best friend']
+
+        c. summary
+            - The Object() constructor function has access to several methods to aid in development. To extract property
+            names and values from an object, we can use:
+            - Object.keys() returns an array of a given object's own keys (property names).
+            - Object.values() returns an array of a given object's own values (property values).
