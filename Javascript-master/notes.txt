@@ -425,3 +425,771 @@ A. Objects in Depth
             names and values from an object, we can use:
             - Object.keys() returns an array of a given object's own keys (property names).
             - Object.values() returns an array of a given object's own values (property values).
+
+B. Functions at runtime
+    1. functions are first class objects
+        a. this means that you can do with a function just about anything that you can do with other elements, such as
+        numbers, strings, objects, arrays, etc. JavaScript functions can:
+
+            - Be stored in variables
+            - Be returned from a function.
+            - Be passed as arguments into another function.
+
+        b. Recall that a function must always return a value. Whether the value is explicitly specified in a return
+        statement (e.g., returning a string, boolean, array, etc.), or the function implicitly returns undefined (e.g.,
+        a function that simply logs something to the console), a function will always return just one value.
+        c. Since we know that functions are first-class functions, we can treat a function as a value and just as easily
+         return a function from another function! A function that returns another function is known as higher-order
+         function. Consider this example:
+
+         function alertThenReturn() {
+           alert('Message 1!');
+           return function () {
+             alert('Message 2!');
+           };
+         }
+         // message 1
+         const innerFunction = alertThenReturn();
+         innerFunction();
+         // alerts 'Message 2!'
+
+    2. Callbacks
+        a. Callback Functions
+            - Recall that JavaScript functions are first-class functions. We can do with functions just about everything
+            we can do with other values -- including passing them into other functions! A function that takes other
+            functions as arguments (and/or returns a function, as we learned in the previous section) is known as a
+            higher-order function. A function that is passed as an argument into another function is called a callback
+            function.
+            - We'll be focusing on callbacks in this section. Callback functions are great because they can delegate
+            calling functions to other functions. They allow you to build your applications with composition, leading
+            to cleaner and more efficient code.
+        b. Array Methods
+            - Where have you probably seen callback functions used? In array methods! Functions are commonly passed into
+            array methods and called on elements within an array (i.e., the array on which the method was called).
+            - forEach()
+                - Array's forEach() method takes in a callback function and invokes that function for each element in
+                the array. In other words, forEach() allows you to iterate (i.e., loop) through an array, similar to
+                using a for loop. Check out its signature:
+
+                array.forEach(function callback(currentValue, index, array) {
+                    // function code here
+                });
+
+                - Let's say we have a simple function, logIfOdd(), that takes in a single number and logs it to the
+                console if that number is an odd number:
+
+                function logIfOdd(n) {
+                  if (n % 2 !== 0) {
+                    console.log(n);
+                  }
+                }
+                logIfOdd(2);
+                // (nothing is logged)
+                logIfOdd(3);
+                // 3
+
+                [1, 5, 2, 4, 6, 3].forEach(function logIfOdd(n) {
+                  if (n % 2 !== 0) {
+                    console.log(n);
+                  }
+                });
+
+                // 1
+                // 5
+                // 3
+
+                // OR JUST PASS FUNCTION NAME
+
+                [1, 5, 2, 4, 6, 3].forEach(logIfOdd);
+
+                // 1
+                // 5
+                // 3
+
+                // OR PASS AN ANONYMOUS FUNCTION
+                [1, 5, 2, 4, 6, 3].forEach(function (n) {
+                  if (n % 2 !== 0) {
+                    console.log(n);
+                  }
+                });
+
+                // 1
+                // 5
+                // 3
+
+            - map()
+                - Array's map() method is similar to forEach() in that it invokes a callback function for each element
+                in an array. However, map() returns a new array based on what's returned from the callback function.
+                Check out the following:
+
+                const names = ['David', 'Richard', 'Veronika'];
+                const nameLengths = names.map(function(name) {
+                  return name.length;
+                });
+
+                - So nameLengths will be a new array: [5, 7, 8]. Again, it is important to understand that the map()
+                method returns a new array; it does not modify the original array.
+
+            - filter()
+                - Array's filter() method is similar to the map() method:
+                    -It is called on an array
+                    -It takes a function as an argument
+                    -It returns a new array
+                - The difference is that the function passed to filter() is used as a test, and only items in the array
+                that pass the test are included in the new array. Consider the following example:
+
+                const names = ['David', 'Richard', 'Veronika'];
+                const shortNames = names.filter(function(name) {
+                  return name.length < 6;
+                });
+
+                - The difference is that the function passed to filter() is used as a test, and only items in the array
+                that pass the test are included in the new array. Consider the following example:
+
+    3. Scope
+        a. If you took Intro to Javascript, you learned about block scope vs. function scope. These determine where a
+        variable can be seen in some code. Computer scientists call this lexical scope.
+        - However, there also exists another kind of scope called runtime scope. When a function is run, it creates a
+        new runtime scope. This scope represents the context of the function, or more specifically, the set of variables
+        available for the function to use.
+        b. Javascript is function scoped
+            - This is all because variables in JavaScript are traditionally defined in the scope of a function, rather
+            than in the scope of a block. Since entering a function will change scope, any variables defined inside that
+            function are not available outside of that function. On the other hand, if there are any variables defined
+            inside a block (e.g., within an if statement), those variables are available outside of that block.
+        c. ES6 syntax allows for additional scope while declaring variables with the let and const keywords. These
+        keywords are used to declare block-scoped variables in JavaScript, and largely replace the need for var.
+        d. scope chain
+            - Whenever your code attempts to access a variable during a function call, the JavaScript interpreter will
+            always start off by looking within its own local variables. If the variable isn't found, the search will
+            continue looking up what is called the scope chain.
+        e. variable shadowing
+            - What happens when you create a variable with the same name as another variable somewhere in the scope chain?
+            - JavaScript won't throw an error or otherwise prevent you from creating that extra variable. In fact, the
+            variable with local scope will just temporarily "shadow" the variable in the outer scope. This is called
+            variable shadowing. Consider the following example:
+
+            const symbol = '¥';
+            function displayPrice(price) {
+              const symbol = '$';
+              console.log(symbol + price);
+            }
+            displayPrice('80');
+            // '$80'
+
+        f. summary
+            - When a function is run, it creates its own scope. A function's scope is the set of variables available for
+            use within that function. The scope of a function includes:
+                -The function's arguments.
+                -Local variables declared within the function.
+                -Variables from its parent function's scope.
+                -Global variables.
+            - Variables in JavaScript are also function-scoped. This means that any variables defined inside a function
+            are not available for use outside the function, though any variables defined within blocks (e.g. if or for)
+            are available outside that block.
+            - When it comes to accessing variables, the JavaScript engine will traverse the scope chain, first looking
+            at the innermost level (e.g., a function's local variables), then to outer scopes, eventually reaching the
+            global scope if necessary.
+    4. Closures
+        a. Functions Retain Their Scope
+            - We just looked at how function scope works and how a scope chain is created. Just to recap: when an
+            identifier (i.e., a variable) is used, the JavaScript engine will check the scope chain to retrieve the
+            value for that identifier. The identifier might be found in the local scope (either in the function or block).
+            If it's not found locally, then it might exist in an outer scope. It'll then keep checking the next outer
+            scope followed by the next outer scope until it reaches the global scope (if necessary).
+            - Identifier lookup and the scope chain are really powerful tools for a function to access identifiers in
+            the code. In fact, this lets you do something really interesting: create a function now, package it up with
+            some variables, and save it to run later. If you have five buttons on the screen, you could write five
+            different click handler functions, or you could use the same code five times with different saved values.
+
+            function remember(number) {
+                return function() {
+                    return number;
+                }
+            }
+            const returnedFunction = remember(5);
+            console.log( returnedFunction() );
+            // 5
+
+            - This process of a function retaining access to its scope is called a closure. In this example, the inner
+            function "closes over" number. A closure can capture any number of parameters and variables that it needs.
+            MDN defines a closure as:
+
+            "the combination of a function and the lexical environment within which that function was declared."
+
+            - This definition might not make a lot of sense if you don't know what the words "lexical environment" mean.
+            The ES5 spec refers to a lexical environment as:
+
+            "the association of Identifiers to specific variables and functions based upon the lexical nesting structure
+            of ECMAScript code."
+
+            - In this case, the "lexical environment" refers the code as it was written in the JavaScript file. As such,
+            a closure is:
+
+                - The function itself, and
+                - The code (but more importantly, the scope chain of) where the function is declared
+
+            - When a function is declared, it locks onto the scope chain. You might think this is pretty straightforward
+            since we just looked at that in the previous section. What's really interesting about a function, though,
+            is that it will retain this scope chain -- even if it is invoked in a location other than where it was
+            declared. This is all due to the closure!
+
+        b. creating a closure
+            - Every time a function is defined, closure is created for that function. Strictly speaking, then, every
+            function has closure! This is because functions close over at least one other context along the scope chain:
+            the global scope. However, the capabilities of closures really shine when working with a nested function
+            (i.e., a function defined within another function).
+            - Recall that a nested function has access to variables outside of it. From what we have learned about the
+            scope chain, this includes the variables from the outer, enclosing function itself (i.e., the parent function)!
+            These nested functions close over (i.e., capture) variables that aren't passed in as arguments nor defined
+            locally, otherwise known as free variables.
+            - As we saw with the remember() function earlier, it is important to note that a function maintains a
+            reference to its parent's scope. If the reference to the function is still accessible, the scope persists!
+        c. closures ans scope
+            - Closures and scope are so closely related that you may even be surprised you had been working with them
+            all along! Let's revisit an example from the previous section:
+
+            const myName = 'Andrew';
+            function introduceMyself() {
+              const you = 'student';
+              function introduce() {
+                console.log(`Hello, ${you}, I'm ${myName}!`);
+              }
+              return introduce();
+            }
+            introduceMyself();
+            // 'Hello, student, I'm Andrew!'
+
+            - To recap: myName is a variable defined outside a function, hence it's a global variable in the global
+            scope. In other words, myName is available for all functions to use.
+        d. applications of closures
+            - To recap, we've seen two common and powerful applications of closures:
+                - Passing arguments implicitly.
+                - At function declaration, storing a snapshot of scope.
+        e. garbage collection
+            - JavaScript manages memory with automatic garbage collection. This means that when data is no longer
+            referable (i.e., there are no remaining references to that data available for executable code), it is
+            "garbage collected" and will be destroyed at some later point in time. This frees up the resources
+            (i.e., computer memory) that the data had once consumed, making those resources available for re-use.
+            - Let's look at garbage collection in the context of closures. We know that the variables of a parent
+            function are accessible to the nested, inner function. If the nested function captures and uses its parent's
+            variables (or variables along the scope chain, such as its parent's parent's variables), those variables
+            will stay in memory as long as the functions that utilize them can still be referenced.
+            - As such, referenceable variables in JavaScript are not garbage collected! Let's quickly look back at the
+            myCounter function from the previous video:
+
+            function myCounter() {
+              let count = 0;
+              return function () {
+                count += 1;
+                return count;
+              };
+            }
+
+            - The existence of the nested function keeps the count variable from being available for garbage collection,
+            therefore count remains available for future access. After all, a given function (and its scope) does not
+            end when the function is returned. Remember that functions in JavaScript retain access to the scope that
+            they were created in!
+        f. summary
+            - A closure refers to the combination of a function and the lexical environment in which that function was
+            declared. Every time a function is defined, closure is created for that function. This is especially
+            powerful in situations where a function is defined within another function, allowing the nested function to
+            access variables outside of it. Functions also keep a link to its parent's scope even if the parent has
+            returned. This prevents data in its parents from being garbage collected.
+            - At this point, we've worked a lot with functions declarations and function expressions. Did you know that
+            you can write functions that can be immediately invoked after they're defined? We'll check out these
+            immediately-invoked function expressions (IIFE's, or iiffy's) in the next section!
+    5. immediately invoked function expressions
+        a. function declarations vs function expressions
+            - A function declaration defines a function and does not require a variable to be assigned to it. It simply
+            declares a function, and doesn't itself return a value. Here's an example:
+
+            function returnHello() {
+              return 'Hello!';
+            }
+
+            - On the other hand, a function expression does return a value. Function expressions can be anonymous or
+            named, and are part of another expression's syntax. They're commonly assigned to variables, as well. Here's
+            the same function as a function expression:
+
+            // anonymous
+            const myFunction = function () {
+              return 'Hello!';
+            };
+            // named
+            const myFunction = function returnHello() {
+              return 'Hello!';
+            };
+
+        b. Immediately-Invoked Function Expressions: Structure and Syntax
+            - An immediately-invoked function expression, or IIFE (pronounced iffy), is a function that is called
+            immediately after it is defined. Check out the following example:
+
+            (function sayHi(){
+                alert('Hi there!');
+              }
+            )();
+            // alerts 'Hi there!'
+
+            - The syntax might seem a bit odd, but all we're doing is wrapping a function in parentheses, then adding a
+            pair of parentheses at the end of that to invoke it!
+        c. passing arguments into IIFE's
+            - Let's look into how we can go about passing arguments into IIFE's. Consider the following example of an
+            anonymous function expression that takes in a single argument:
+
+            (function (name){
+                alert(`Hi, ${name}`);
+              }
+            )('Andrew');
+            // alerts 'Hi, Andrew'
+
+            - The second pair of parentheses not only immediately executes the function preceding it -- it's also the
+            place to put any arguments that the function may need! We pass in the string 'Andrew', which is stored in
+            the function expression's name variable. It is then immediately invoked, alerting the message 'Hi, Andrew'
+            onto the screen.
+            - Here's another example of an IIFE, this time taking two arguments and returning their product:
+
+            (function (x, y){
+                console.log(x * y);
+              }
+            )(2, 3);
+            // 6
+
+        d. IIFE and private scope
+            - One of the primary uses for IIFE's is to create private scope (i.e., private state). Recall that variables
+             in JavaScript are traditionally scoped to a function. Knowing this, we can leverage the behavior of
+             closures to protect variables or methods from being accessed! Consider the following example of a simple
+             closure within an IIFE, referenced by myFunction:
+
+             const myFunction = (
+               function () {
+                 const hi = 'Hi!';
+                 return function () {
+                   console.log(hi);
+                 }
+               }
+             )();
+
+            - In the above image, an immediately-invoked function expression is used to immediately run a function.
+            This function runs and returns an anonymous function that is stored in the myFunction variable.
+            - Note that the function that is being returned closes over (i.e., captures) the hi variable. This allows
+            myFunction to maintain a private, mutable state that cannot be accessed outside the function! What's more:
+            because the function expressed is called immediately, the IIFE wraps up the code nicely so that we don't
+            pollute the global scope.
+        e. IIFE's private scope, and event handling
+            - Let's check out another example of an immediately-invoked function expression -- this time in the context
+            of handling an event. Say that we want to create a button on a page that alerts the user on every other click.
+            One way to begin doing this would be to keep track of the number of times that the button was clicked. But
+            how should we maintain this data?
+            - Next, we'll add an event listener to button, and listen for a 'click' event. Then, we'll pass in an IIFE
+             as the second argument:
+
+             // button.js
+             button.addEventListener('click', (function() {
+               let count = 0;
+
+               return function() {
+                 count += 1;
+
+                 if (count === 2) {
+                   alert('This alert appears every other press!');
+                   count = 0;
+                 }
+               };
+             })());
+
+             - First, we declare a local variable, count, which is initially set to 0. We then return a function from
+             that function. The returned function increments count, but alerts the user and resets the count back to 0
+             if the count reaches 2.
+             - What is important to note is that the returned function closes over the count variable. That is, because
+             a function maintains a reference to its parent's scope, count is available for the returned function to use!
+             As a result, we immediately invoke a function that returns that function. And since the returned function
+             has access to the internal variable, count, a private scope is created -- effectively protecting the data!
+        f. benefits of immediately invoked functions expressions
+            - We've seen how using an immediately-invoked function expression creates a private scope that protects
+            variables or methods from being accessed. IIFE's ultimately use the returned functions to access private
+            data within the closure. This works out very well: while these returned functions are publicly-accessible,
+            they still maintain privacy for the variables defined within them!
+            - Another great opportunity to use an IFFE is when you want to execute some code without creating extra
+            global variables. However, note that an IIFE is only intended to be invoked once, to create a unique
+            execution context. If you have some code that is expected to be re-used (e.g., a function meant to be
+            executed more than once in the application), declaring the function and then invoking it might be a better option.
+
+C. classes and objects
+    1. constructor functions
+        - Previously, we have created objects using the object literal notation. Likewise, we can even write functions
+        that return objects. There is yet another way for us to create objects, and it is the foundation of
+        object-oriented JavaScript: the constructor function. We saw a bit of it back in Lesson 1 when invoking the
+        Object() constructor function. Now, let's take a deeper dive into it!
+        - To instantiate (i.e., create) a new object, we use the new operator to invoke the function:
+
+        new SoftwareDeveloper();
+
+        - The first thing to note above is the use of the new keyword. Second, note that the name of the constructor
+        function, SoftwareDeveloper(), is written with the first letter capitalized to visually distinguish it from a
+        regular function.
+        - Keep in mind that even though the function's name starts with a capital, that doesn't automatically make this
+        a constructor function (i.e., though developers name constructor functions in CamelCase by convention, it is not
+        enforced by the language). What does make SoftwareDeveloper() a constructor function are:
+
+            The use of the new operator to invoke the function
+            How the function is coded internally (which we'll look at right now!)
+
+        b. constructor functions: structure and syntax
+            - This is what the internals of a constructor function looks like:
+
+            function SoftwareDeveloper() {
+              this.favoriteLanguage = 'JavaScript';
+            }
+
+            - First, rather than declaring local variables, constructor functions persist data with the this keyword.
+            The above function will add a favoriteLanguage property to any object that it creates, and assigns it a
+            default value of 'JavaScript'. Don't worry too much about this in a constructor function for now; just know
+            that this refers to the new object that was created by using the new keyword in front of the constructor
+            function. We'll go into more detail about this soon!
+            - One last thing that might seem unusual is that this function doesn't seem to return anything! Constructor
+            functions in JavaScript should not have an explicit return value (i.e., there should not be return statement).
+
+        c. creating a new object
+            -  As we've seen above, let's use the new operator to create a new object:
+
+            let developer = new SoftwareDeveloper();
+
+        d. creating multiple pbjects
+            - Let's invoke the same SoftwareDeveloper() constructor two more times to instantiate two additional objects:
+            engineer and programmer.
+
+            let engineer = new SoftwareDeveloper();
+            let programmer = new SoftwareDeveloper();
+            console.log(engineer);
+            // SoftwareDeveloper { favoriteLanguage: 'JavaScript' }
+            console.log(programmer);
+            // SoftwareDeveloper { favoriteLanguage: 'JavaScript' }
+
+        e. constructor functions can have parameters
+            - Just like regular functions, one benefit of using constructor functions is that they can also accept
+            arguments. Let's update the constructor above to accept a single argument, and assign the name property to it:
+
+            function SoftwareDeveloper(name) {
+              this.favoriteLanguage = 'JavaScript';
+              this.name = name;
+            }
+
+            - In the updated SoftwareDeveloper() function, whatever value is passed into the function will be the value
+            of the object's name property. Let's check it out:
+
+            let instructor = new SoftwareDeveloper('Andrew');
+            console.log(instructor);
+            // SoftwareDeveloper { favoriteLanguage: 'JavaScript', name: 'Andrew' }
+
+            - Great! And as we've seen above, we can create different objects using the same constructor. Let's call the
+            same constructor function but pass a different argument this time:
+
+            let teacher = new SoftwareDeveloper('Richard');
+
+            console.log(teacher);
+            // SoftwareDeveloper { favoriteLanguage: 'JavaScript', name: 'Richard' }
+
+        f. omitting the new operator
+            - What's going on? Without using the new operator, no object was created. The function was invoked just like
+            any other regular function. Since the function doesn't return anything (except undefined, which all functions
+            return by default), the coder variable ended up being assigned to undefined.
+            - One more thing to note: since this function was invoked as a regular function, the value of this is also
+            drastically different. Don't worry too much about this for now; we'll take a deep dive into the this keyword
+            in the very next section!
+        g. seeing the object's constructor (instanceof)
+            -  What if we want to see if an object was created with a constructor function in the first place? We can
+            use the instanceof (which returns a boolean) to give us some insight.
+            - instanceof and the prototype chain
+                - In the above example, instanceof confirmed that a specific constructor function did in fact create a
+                specific object. We know this because we directly instantiated the dev object after invoking the
+                Developer() constructor function.
+                - Many times, however, it's a bit more complex: the instanceof operator actually tests whether or not
+                that constructor appears in the prototype chain of an object. This means that we can't always check
+                exactly which constructor created that object, but it does give us insight as to what other properties
+                and methods an object may have access to.
+        h. summary
+            - JavaScript's class system is built directly on using functions and objects. Calling (i.e., invoking) a
+            constructor function with the new operator instantiates a new object. The same constructor function can be
+            used to create different objects.
+            - We've discussed functions, objects, and this throughout this course. As it turns out, all three are very
+            much interconnected with one another! We'll examine their relationship in the next section as we take an
+            in-depth look at the this keyword.
+    2. the this keyword
+        a. In the previous section, we saw this right inside a constructor function. Here's another example:
+
+            function Cat(name) {
+             this.name = name;
+             this.sayName = function () {
+               console.log(`Meow! My name is ${this.name}`);
+             };
+            }
+            const bailey = new Cat('Bailey');
+
+            - In the above Cat() constructor, the function that sayName references this.name. Back in Lesson 1, we saw this
+            used in methods. But in Cat()'s case, what exactly does this refer to?
+
+            - As it turns out, when invoking a constructor function with the new operator, this gets set to the
+            newly-created object! Let's check out what the new bailey object looks like:
+
+            {
+              name: 'Bailey',
+              sayName: function () {
+                console.log(`Meow! My name is ${this.name}`);
+              }
+            }
+
+            - In the snippet above, notice that this is outside a constructor function (i.e., in a method). As we saw in
+            Lesson 1, when you say this in a method, what you're really saying is "this object" or "the object at hand."
+            As a result, the sayName() method can use this to access the name property of that object! This makes the
+            following method call possible:
+
+            bailey.sayName();
+            // 'Meow! My name is Bailey'
+
+            - Note: For a refresher on how a method uses this to access an object on which it was called, feel free to
+            review Invoking Object Methods in Lesson 1.
+
+        b. when is this assigned?
+            - A common misconception is that this refers to the object where it is defined. This is not the case!
+            - The value of this is actually not assigned to anything until an object calls the method where this is used.
+            In other words, the value assigned to this is based on the object that invokes the method where this is
+            defined. Let's look at an example:
+
+            const dog = {
+              bark: function () {
+                console.log('Woof!');
+              },
+              barkTwice: function () {
+                this.bark();
+                this.bark();
+              }
+            };
+            dog.bark();
+            // Woof!
+            dog.barkTwice();
+            // Woof!
+            // Woof!
+
+            - We know that when we call dog.bark(); (or dog.barkTwice();) a variable this gets set. Since this can
+            access the object it was called on, barkTwice can use this to access the dog object, which contains the bark
+            method.
+            - But what if we just wrote bark(); instead of this.bark(); in barkTwice? The function would have first
+            looked for a local variable named bark in the scope of barkTwice. If bark isn't found, it would have looked
+            further up the scope chain.
+        c. what does this get set to?
+            - At this point, we've seen this in many different contexts, such as within a method, or referenced by a
+            constructor function. Let's now organize our thoughts and bring it all together!
+            - There are four ways to call functions, and each way sets this differently.
+            - First, calling a constructor function with the new keyword sets this to a newly-created object. Recall
+            that creating an instance of Cat earlier had set this to the new bailey object.
+            - On the other hand, calling a function that belongs to an object (i.e., a method) sets this to the object
+            itself. Recall that earlier, the dog object's barkTwice() method was able to access properties of dog itself.
+
+            function funFunction() {
+              return this;
+            }
+            funFunction();
+            // (returns the global object, `window`)
+
+            - The fourth way to call functions allows us to set this ourselves! Don't worry about this approach for now;
+            we'll take a deep dive in the very next section.
+
+    3. setting our own this with call() apply() and bind()
+        a.  Each method can be directly invoked onto a function itself (after all, JavaScript functions are first-class
+        functions and can have properties and methods). As a result, the receiving function will be invoked with a
+        specified this value, as well as any arguments passed in.
+        b. call()
+            - call() is a method directly invoked onto a function. We first pass into it a single value to set as the
+            value of this; then we pass in any of the receiving function's arguments one-by-one, separated by commas.
+            - Consider the following function, multiply(), which simply returns the product of its two arguments:
+
+            function multiply(n1, n2) {
+              return n1 * n2;
+            }
+
+            - Let's invoke it in the console:
+
+            multiply(3, 4);
+            // 12
+
+            multiply.call(window, 3, 4);
+            // 12
+
+            - After writing that part, it's time to pass in the arguments! For the first argument of the call() method,
+            we pass in the value to be set as this, which is window. We then finish up by passing in the multiply()
+            function's arguments individually, separated by commas.
+            - Once multiply.call(window, 3, 4); executes, the function will be invoked with the given value of this, and
+            the result that we see is 12. Outside of strict mode, both ways of invoking multiply() above are equivalent.
+            - Along with invoking regular functions, how do we go upon invoking functions attached to objects
+            (i.e., methods)? This is where the power of call() really shines. Using call() to invoke a method allows us
+            to "borrow" a method from one object -- then use it for another object! Check out the following object,
+            mockingbird:
+
+            const mockingbird = {
+              title: 'To Kill a Mockingbird',
+              describe: function () {
+                console.log(`${this.title} is a classic novel`);
+              }
+            };
+
+            - We can have mockingbird invoke its own describe() method:
+
+            mockingbird.describe();
+            // 'To Kill a Mockingbird is a classic novel'
+
+            - Using call(), however, the following pride object can utilize mockingbird's describe() method:
+
+            const pride = {
+              title: 'Pride and Prejudice'
+            };
+            mockingbird.describe.call(pride);
+            // 'Pride and Prejudice is a classic novel'
+
+            - First, the call() method is invoked onto mockingbird.describe (which points to a function). Then, the
+            value of this is passed into the call() method: pride.
+            - Since mockingbird's describe() method references this.title, we need to access the title property of the
+            object that this refers to. But since we've set our own value of this, the value of this.title will be
+            accessed from the pride object! As a result, mockingbird.describe.call(pride); is executed, and we see
+            'Pride and Prejudice is a classic novel' in the console.
+            - call() is very effective if you're looking to invoke a function in the scope of the first argument passed
+            into it. Likewise, we can leverage the apply() method to do the same, albeit with differences in how
+            arguments are passed into it. Let's take a closer look!
+        c. apply()
+            - Just like call(), the apply() method is called on a function to not only invoke that function, but also to
+            associate with it a specific value of this. However, rather than passing arguments one-by-one, separated by
+            commas -- apply() takes the function's arguments in an array. Recall the multiply() function from earlier:
+
+            function multiply(n1, n2) {
+              return n1 * n2;
+            }
+
+            - We used call() and passed in arguments individually:
+
+            multiply.call(window, 3, 4);
+            // 12
+
+            - Using apply(), however, we collect all of the multiply() function's arguments in an array! Then, we pass
+            that entire array into apply():
+
+            multiply.apply(window, [3, 4]);
+            // 12
+
+            mockingbird.describe.apply(pride);
+            // 'Pride and Prejudice is a classic novel'
+
+            - Note that the first argument passed into both call() and apply() is the same: pride. Since the describe()
+            method doesn't take any arguments, the only difference between mockingbird.describe.call(pride); and
+            mockingbird.describe.apply(pride); is just the method! Both approaches produce the same result.
+        d. Choosing One Method Over the Other
+            - Both call() and apply() invoke a function in the scope of the first argument passed in them (i.e., the
+            object to be the value of this). So when would you choose call() over apply(), or vice versa?
+            - call() may be limited if you don't know ahead of time the number of arguments that the function needs. In
+            this case, apply() would be a better option, since it simply takes an array of arguments, then unpacks them
+            to pass along to the function. Keep in mind that the unpacking comes at a minor performance cost, but it
+            shouldn't be much of an issue.
+        e. Saving this with an Anonymous Closure
+            - Recall that simply invoking a normal function will set the value of this to the global object (i.e., window). This is an issue, because we want this to be the dog object!
+            - So how can we make sure that this is preserved?
+            - One way to resolve this issue is to use an anonymous closure to close over the dog object:
+
+            invokeTwice(function () {
+              dog.growOneYear();
+            });
+            dog.age;
+            // 7
+        f. Saving this with bind()
+            - Similar to call() and apply(), the bind() method allows us to directly define a value for this. bind() is
+            a method that is also called _on_ a function, but unlike call() or apply(), which both invoke the function
+            right away -- bind() returns a new function that, when called, has this set to the value we give it.
+        g. summary
+              JavaScript provides three methods that allow us to set the value of this for a given function:
+
+              call() invokes the function and has arguments passed in individually, separated by commas.
+              apply() is similar to call(); it invokes the function just the same, but arguments are passed in as an array.
+              bind() returns a new function with this bound to a specific object, allowing us to call it as a regular function.
+              For further research, we recommend checking out Kyle Simpson's You Don't Know JS series on this, linked below.
+
+              At this point, you've seen how functions, objects, and the this keyword are all very much interconnected.
+              You've also seen how just about everything in JavaScript is an object!
+
+              Did you know that you can even base objects on other objects? This is the main idea behind prototypal
+              inheritance, and by implementing it, objects can take on properties of other objects. We'll cover all this
+              and more, coming up next!
+
+
+
+
+
+        a. remember constructor functions
+
+              function City(name, population) {
+                this.name = name;
+                this.population = population;
+                this.identify = function () {
+                  console.log(`${this.name}'s population is ${this.population}.`);
+                };
+              }
+
+              const sanFrancisco = new City('San Francisco', 870000);
+              console.log(sanFrancisco);
+              // {
+              //   name: 'San Francisco',
+              //   population: 870000,
+              //   identify: function () {
+              //     console.log(`${this.name}'s population is ${this.population}.`);
+              //   };
+              // }
+
+              const mountainView = new City('Mountain View', 78000);
+
+              console.log(mountainView);
+              // {
+              //   name: 'Mountain View',
+              //   population: 78000,
+              //   identify: function () {
+              //     console.log(`${this.name}'s population is ${this.population}.`);
+              //   };
+              // }
+
+        b. Factory functions
+            - A factory function is a function that returns an object, but isn't itself a class or constructor. As such,
+            we invoke a factory function as a normal function without using the new operator. Using a factory function,
+            we can easily create object instances without the complexity of classes and constructors!
+
+            function Basketball(color) {
+              return {
+                color: color,
+                numDots: 35000
+              };
+            }
+
+            - What's important to note here is that Basketball() returns an object directly. This is different from a
+            constructor function which returns its object automatically.
+            - Let's invoke Basketball() and check out its output:
+
+            const orangeBasketball = Basketball('orange');
+            console.log(orangeBasketball);
+            // { color: 'orange', numDots: 35000 }
+
+            - A factory function has its name because, just like a chair factory can produce chair after chair after
+            chair, a factory function can be used over and over to create any number of objects:
+
+                - const myBB = Basketball('blue and green');
+                - const yourBB = Basketball('purple');
+                - const bouncy = Basketball('neon pink');
+
+        c. functional mixins
+            - In the previous section, we used mixins to add features into a composite object. We also just leveraged
+            factory functions to create objects without using the new operator or messing with prototypal inheritance.
+            Let's combine what we've learned from mixins and factory functions and take things a step further with
+            functional mixins!
+
+
+
+
+
+
+
+
+
