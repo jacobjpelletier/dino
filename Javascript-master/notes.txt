@@ -1102,27 +1102,400 @@ C. classes and objects
             - Similar to call() and apply(), the bind() method allows us to directly define a value for this. bind() is
             a method that is also called _on_ a function, but unlike call() or apply(), which both invoke the function
             right away -- bind() returns a new function that, when called, has this set to the value we give it.
-        g. summary
-              JavaScript provides three methods that allow us to set the value of this for a given function:
+            - summary
+                  JavaScript provides three methods that allow us to set the value of this for a given function:
 
-              call() invokes the function and has arguments passed in individually, separated by commas.
-              apply() is similar to call(); it invokes the function just the same, but arguments are passed in as an array.
-              bind() returns a new function with this bound to a specific object, allowing us to call it as a regular function.
-              For further research, we recommend checking out Kyle Simpson's You Don't Know JS series on this, linked below.
+                  call() invokes the function and has arguments passed in individually, separated by commas.
+                  apply() is similar to call(); it invokes the function just the same, but arguments are passed in as an array.
+                  bind() returns a new function with this bound to a specific object, allowing us to call it as a regular function.
+                  For further research, we recommend checking out Kyle Simpson's You Don't Know JS series on this, linked below.
 
-              At this point, you've seen how functions, objects, and the this keyword are all very much interconnected.
-              You've also seen how just about everything in JavaScript is an object!
+                  At this point, you've seen how functions, objects, and the this keyword are all very much interconnected.
+                  You've also seen how just about everything in JavaScript is an object!
 
-              Did you know that you can even base objects on other objects? This is the main idea behind prototypal
-              inheritance, and by implementing it, objects can take on properties of other objects. We'll cover all this
-              and more, coming up next!
+                  Did you know that you can even base objects on other objects? This is the main idea behind prototypal
+                  inheritance, and by implementing it, objects can take on properties of other objects. We'll cover all this
+                  and more, coming up next!
+    4. Prototypal Inheritance
+        a. adding methods to the protoype
+            - Recall that objects contain data (i.e., properties), as well as the means to manipulate that data (i.e.,
+            methods). Earlier in this Lesson, we simply added methods directly into the constructor function itself:
 
+            function Cat(name) {
+             this.lives = 9;
+             this.name = name;
 
+             this.sayName = function () {
+               console.log(`Meow! My name is ${this.name}`);
+             };
+            }
 
+            - This way, a sayName method gets added to all Cat objects by saving a function to the sayName attribute of
+            newly-created Cat objects.
+            - This works just fine, but what if we want to instantiate more and more Cat objects with this constructor?
+            You'll create a new function every single time for that Cat object's sayName! What's more: if you ever want
+            to make changes to the method, you'll have to update all objects individually. In this situation, it makes
+            sense to have all objects created by the same Cat constructor function just share a single sayName method.
+            - To save memory and keep things DRY, we can add methods to the constructor function's prototype property.
+            The prototype is just an object, and all objects created by a constructor function keep a reference to the
+            prototype. Those objects can even use the prototype's properties as their own!
+            - Recall that each function has a prototype property, which is really just an object. When this function is
+            invoked as a constructor using the new operator, it creates and returns a new object. This object is
+            secretly linked to its constructor's prototype, and this secret link allows the object to access the
+            prototype's properties and methods as if it were its own!
+            - Since we know that the prototype property just points to a regular object, that object itself also has a
+            secret link to its prototype. And that prototype object also has reference to its own prototype -- and so
+            on. This is how the prototype chain is formed.
+        b. finding properties and methods on the prototype chain
+            - Whether you're accessing a property (e.g., bailey.lives;) or invoking a method (e.g., bailey.meow();), the
+            JavaScript interpreter looks for them along the prototype chain in a very particular order:
+                - First, the JavaScript engine will look at the object's own properties. This means that any properties and
+                methods defined directly in the object itself will take precedence over any properties and methods
+                elsewhere if their names are the same (similar to variable shadowing in the scope chain).
+                - If it doesn't find the property in question, it will then search the object's constructor's prototype
+                for a match.
+                - If the property doesn't exist in the prototype, the JavaScript engine will continue looking up the chain.
+                - At the very end of the chain is the Object() object, or the top-level parent. If the property still
+                cannot be found, the property is undefined.
+        c.  Replacing the prototype Object
+            - What happens if you completely replace a function's prototype object? How does this affect objects created
+            by that function? Let's look at a simple Hamster constructor function and instantiate a few objects:
 
+            function Hamster() {
+              this.hasFur = true;
+            }
+            let waffle = new Hamster();
+            let pancake = new Hamster();
 
+            Hamster.prototype.eat = function () {
+              console.log('Chomp chomp chomp!');
+            };
+            waffle.eat();
+            // 'Chomp chomp chomp!'
+            pancake.eat();
+            // 'Chomp chomp chomp!'
+
+            Hamster.prototype = {
+              isHungry: false,
+              color: 'brown'
+            };
+
+            - The previous objects don't have access to the updated prototype's properties; they just retain their
+            secret link to the old prototype:
+
+            console.log(waffle.color);
+            // undefined
+            waffle.eat();
+            // 'Chomp chomp chomp!'
+            console.log(pancake.isHungry);
+            // undefined
+
+            - As it turns out, any new Hamster objects created moving forward will use the updated prototype:
+            const muffin = new Hamster();
+
+            muffin.eat();
+            // TypeError: muffin.eat is not a function
+            console.log(muffin.isHungry);
+            // false
+            console.log(muffin.color);
+            // 'brown'
+
+        d. checking an objects properties
+            - hasOwnProperty()
+                - hasOwnProperty() allows you to find the origin of a particular property. Upon passing in a string of
+                the property name you're looking for, the method will return a boolean indicating whether or not the
+                property belongs to the object itself (i.e., that property was not inherited). Consider the Phone
+                constructor with a single property defined directly in the function, and another property on its
+                prototype object:
+
+                function Phone() {
+                  this.operatingSystem = 'Android';
+                }
+                Phone.prototype.screenSize = 6;
+
+                const myPhone = new Phone();
+                const own = myPhone.hasOwnProperty('operatingSystem');
+                console.log(own);
+                // true
+
+                const inherited = myPhone.hasOwnProperty('screenSize');
+                console.log(inherited);
+                // false
+
+            - isPrototypeOf()
+                - Objects also have access to the isPrototypeOf() method, which checks whether or not an object exists
+                in another object's prototype chain. Using this method, you can confirm if a particular object serves
+                as the prototype of another object. Check out the following rodent object:
+
+                const rodent = {
+                  favoriteFood: 'cheese',
+                  hasTail: true
+                };
+
+                function Mouse() {
+                  this.favoriteFood = 'cheese';
+                }
+                Mouse.prototype = rodent;
+
+                const ralph = new Mouse();
+                const result = rodent.isPrototypeOf(ralph);
+                console.log(result);
+                // true
+
+            - Object.getPrototypeOf()
+                - isPrototypeOf() works well, but keep in mind that in order to use it, you must have that prototype
+                object at hand in the first place! What if you're not sure what a certain object's prototype is?
+                Object.getPrototypeOf() can help with just that!
+                - Using the previous example, let's store the return value of Object.getPrototypeOf() in a variable,
+                myPrototype, then check what it is:
+
+                const myPrototype = Object.getPrototypeOf(ralph);
+                console.log(myPrototype);
+                // { favoriteFood: 'cheese', hasTail: true }
+
+                - Great! The prototype of ralph has the same properties as the result because they are the same object.
+                Object.getPrototypeOf() is great for retrieving the prototype of a given object.
+
+        e. the constructor property
+            - Each time an object is created, a special property is assigned to it under the hood: constructor.
+            Accessing an object's constructor property returns a reference to the constructor function that created that
+            object in the first place! Here's a simple Longboard constructor function. We'll also go ahead and make a
+            new object, then save it to a board variable:
+
+            function Longboard() {
+              this.material = 'bamboo';
+            }
+            const board = new Longboard();
+
+            If we access board's constructor property, we should see the original constructor function itself:
+
+            console.log(board.constructor);
+            // function Longboard() {
+            //   this.material = 'bamboo';
+            // }
+
+            Excellent! Keep in mind that if an object was created using literal notation, its constructor is the built-in
+            Object() constructor function!
+
+            const rodent = {
+              favoriteFood: 'cheese',
+              hasTail: true
+            };
+            console.log(rodent.constructor);
+            // function Object() { [native code] }
+        f. summary
+            - Inheritance in JavaScript is when an object is based on another object. Inheritance allows us to reuse
+            existing code, having objects take on properties of other objects.
+            - When a function is called as a constructor using the new operator, the function creates and returns a new
+            object. This object is secretly linked to its constructor's prototype, which is just another object. Using
+            this secret link allows an object to access the prototype's properties and methods as if it were its own.
+            If JavaScript does not find a particular property within an object, it will keep looking up the prototype
+            chain, eventually reaching Object() (top-level parent) if necessary.
+            - We also looked at a few methods and properties that allow use to check the origins and references of
+            objects and their prototypes, namely:
+
+              hasOwnProperty()
+              isPrototypeOf()
+              Object.getPrototypeOf()
+              .constructor
+
+            - In the next section, we'll check out another part of prototypal inheritance in the form of subclassing.
+            What if you want to inherit just a few properties from an object -- but want an object to also have other,
+            specialized properties of their own? We'll take an even deeper dive into prototypal inheritance in the next
+            section!
+
+    5. prototypal inheritance, subclasses
+        a. subclasses
+            - One of the benefits of implementing inheritance is that it allows you to reuse existing code. By
+            establishing inheritance, we can subclass, that is, have a "child" object take on most or all of a "parent"
+            object's properties while retaining unique properties of its own.
+            - Let's say we have a parent Animal object, which contains properties like age and weight. That same Animal
+            object can also access methods like eat and sleep.
+            - Now, let's also say that we want to create a Cat child object. Just like you can with other animals, you
+            can also describe a cat by its age or weight, and you can also be certain that the cat eats and sleeps as
+            well. When creating that Cat object, then, we can simply re-write and re-implement all those methods and
+            properties from Animal -- or, we can save some time and prevent repeated code by having Cat inherit those
+            existing properties and methods from Animal!
+            - Not only can Cat take on properties and methods of Animal, we can also give Cat its own unique properties
+            and methods as well! Perhaps a Cat has a unique lives property of 9, or it has a specialized meow() method
+            that no Animal has.
+        b. the secret link
+            - As you know, an object's constructor function's prototype is first place searched when the JavaScript
+            engine tries to access a property that doesn't exist in the object itself. Consider the following bear
+            object with two properties, claws and diet:
+
+            const bear = {
+              claws: true,
+              diet: 'carnivore'
+            };
+
+            function PolarBear() {
+              // ...
+            }
+            PolarBear.prototype = bear;
+
+            const snowball = new PolarBear();
+            snowball.color = 'white';
+            snowball.favoriteDrink = 'cola';
+
+            {
+              color: 'white',
+              favoriteDrink: 'cola'
+            }
+
+            console.log(snowball.claws);
+            // true
+            console.log(snowball.diet);
+            // 'carnivore'
+
+            - Since claws and diet both exist as properties in the prototype object, they are looked up because objects
+            are secretly linked to their constructor's prototype property.
+            - Great! But you may be wondering: just what is this secret link that leads to the prototype object? Right
+            after objects are made from the PolarBear() constructor (such as snowball), they have immediate access to
+            properties in PolarBear()'s prototype. How exactly is this possible?
+            - As it turns out, the secret link is snowball's __proto__ property (note the two underscores on each end).
+            __proto__ is a property of all objects (i.e., instances) made by a constructor function, and points directly
+            to that constructor's prototype object. Let's check out what it looks like!
+
+            console.log(snowball.__proto__);
+            // { claws: true, diet: 'carnivore' }
+
+            console.log(snowball.__proto__ === bear);
+            // true
+
+            - It is highly discouraged to reassign the __proto__ property, or even use it in any code you write. First,
+            there are compatibility issues across browsers. What's more: since the JavaScript engine searches and
+            accesses properties along the prototype chain, mutating an object's prototype can lead to performance issues.
+            The MDN article for proto even warns against using this property in red text at the very top of the page!
+            - It's great to know the secret link for learning how functions and objects are interconnected, but you
+            should not use __proto__ to manage inheritance. If you ever just need to review an object's prototype, you
+            can still use Object.getPrototypeOf().
+        c.  What About Just Inheriting the Prototype?
+            -  Let's say we want a Child object to inherit from a Parent object. Why shouldn't we just set
+            Child.prototype = Parent.prototype?
+            - First, recall that objects are passed by reference. This means that since the Child.prototype object and
+            the Parent.prototype object refer to the same object -- any changes you make to Child's prototype will also
+            be made to Parent's prototype! We don't want children being able to modify properties of their parents!
+            - On top of all this, no prototype chain will be set up. What if we want an object to inherit from any object
+            we want, not just its prototype?
+            - We still need a way to efficiently manage inheritance without mutating the prototype at all.
+        d. Object.create()
+            - At this point, we've reached a few roadblocks when it comes to inheritance. First, even though __proto__
+            can access the prototype of the object it is called on, using it in any code you write is not good practice.
+            - What's more: we also shouldn't inherit only the prototype; this doesn't set up the prototype chain, and
+            any changes that we made to a child object will also be reflected in a parent object.
+            - There's actually a way for us to set up the prototype of an object ourselves: using Object.create().
+            And best of all, this approach lets us manage inheritance without altering the prototype!
+            - Object.create() takes in a single object as an argument, and returns a new object with its __proto__
+            property set to what argument is passed into it. From that point, you simply set the returned object to be
+            the prototype of the child object's constructor function. Let's check out an example!
+            - First, let's say we have a mammal object with two properties: vertebrate and earBones:
+
+            const mammal = {
+              vertebrate: true,
+              earBones: 3
+            };
+
+            - Recall that Object.create() takes in a single object as an argument, and returns a new object. That new
+            object's __proto__ property is set to whatever was originally passed into Object.create(). Let's save that
+            returned value to a variable, rabbit:
+
+            const rabbit = Object.create(mammal);
+
+            console.log(rabbit);
+            // {}
+
+            - However, rabbit should now be secretly linked to mammal. That is, its __proto__ property should point to
+            mammal:
+
+            console.log(rabbit.__proto__ === mammal);
+            // true
+
+            console.log(rabbit.vertebrate);
+            // true
+            console.log(rabbit.earBones);
+            // 3
+
+D. Design patterns
+    1. mixins / extending object functionality with mixins
+        a. An Object is Prototype-linked to a Single Object
+            - Recall that an object's .prototype property points to just one object. This is because JavaScript only
+            supports single inheritance. If there is an object A and an object B, object C can only be prototype-linked
+            to either A _or_ B.
+        b. mixins
+            - If a JavaScript object can only be prototype-linked to a single object, how can we go about extending
+            properties and methods from multiple different sources? A mixin allows us to just that!
+            - A mixin is a technique that takes the properties and methods from one object and copies them over to
+            another object. In other words: a mixin is an technique that provides some useful functionality, but is not
+            meant to be added to the prototype chain.
+            - Did you know that the term mixin is actually inspired by ice cream? The concept of a basic flavor being
+            mixed in with several different extra items (e.g. nuts, fudge, cookies, sprinkles, etc.) was later adopted
+            by computer scientists in object-oriented programming. What a tasty revelation!
+        c.  Object.assign()
+            - The simplest way to implement the mixin pattern is to use Object.assign(). Object.assign() is a method
+            that copies an object's own (non-inherited) properties from one or more source objects into a target object,
+            then returns the updated target object. In other words, Object.assign() adds to the target object by merging
+            in the source object(s). Consider the following:
+
+            let target = {};
+            let source = { number: 7 };
+            Object.assign(target, source);
+            console.log(target);
+            // { number: 7 }
+
+            - The first argument passed in, target, is the destination that receives the properties copied from the
+            source object, source. Note that Object.assign() does not create and return a new object; it directly
+            modifies then returns the same target object that was passed in! As such, values of existing properties will
+            be overwritten, while properties that don't exist in the source object will remain intact:
+
+            let target = { letter: 'a', number: 11 };
+            let source = { number: 7 };
+            Object.assign(target, source);
+            console.log(target);
+            // { letter: 'a', number: 7 }
+
+            - In the above example, the value of target's number property was overwritten, while its letter property was
+            ignored.
+
+        d. multiple source objects
+            - Object.assign() can even take in multiple different source objects. Let's create a platypus object by
+            mixing in properties from other animals:
+
+            const duck = {
+              hasBill: true
+            };
+            const beaver = {
+              hasTail: true
+            };
+            const otter = {
+              hasFur: true,
+              feet: 'webbed'
+            };
+            const platypus = Object.assign({}, duck, beaver, otter);
+            console.log(platypus);
+            // { hasBill: true, hasTail: true, hasFur: true, feet: 'webbed' }
+
+            platypus.constructor;
+            // Object()
+            platypus.isPrototypeOf(duck);
+            // false
+            duck.isPrototypeOf(platypus);
+            // false
+            platypus.isPrototypeOf(beaver);
+            // false
+            beaver.isPrototypeOf(duck);
+            // false
+            platypus.isPrototypeOf(otter);
+            // false
+            otter.isPrototypeOf(platypus);
+            // false
+
+        e. Object.assign() Compatibility
+            - Object.assign() is a great way to copy properties own properties into a given object. Keep in mind that
+            since it was introduced to the official specification in ES2015 (ES6), you may need to review browser
+            compatibility to make sure it'll work in your environment.
+    2.
         a. remember constructor functions
-
               function City(name, population) {
                 this.name = name;
                 this.population = population;
@@ -1185,11 +1558,135 @@ C. classes and objects
             Let's combine what we've learned from mixins and factory functions and take things a step further with
             functional mixins!
 
+            function CoffeeMaker(object) {
+              let needsRefill = false;
+              return Object.assign({}, object, {
+                pourAll: function () {
+                  needsRefill = true;
+                },
+                isEmpty: function () {
+                  return needsRefill;
+                }
+              });
+            }
+
+            - Note that unlike a standard factory function, which takes in individual property values as arguments --
+            the functional mixin actually takes in an object itself! Whichever object is passed in to the function, is
+            merged with other objects passed into Object.assign().
+
+            const mixedCoffeeMaker = CoffeeMaker({ style: 'percolator' });
+
+            {
+              style: 'percolator',
+              pourAll: function () {
+                needsRefill = true;
+              },
+              isEmpty: function () {
+                return needsRefill;
+              }
+            }
+
+            - A factory function creates objects. It is invoked as normal function, not with the new operator. Functional
+            mixins take things a bit further by accepting a mixin as an argument, copies properties and methods from the
+            mixin, and returns a new object.
+
+        3. the module pattern
+            a. Private Properties: Function
+                - Since JavaScript has _no_ concept of private properties out-of-the-box, there is no special syntax or
+                keyword we can use to protect certain properties from being accessed.
+                - However, there is hope! Recall from earlier lessons that we can use scope and closures to create a
+                private state. Let's look at a quick refresher:
+
+                function myCounter() {
+                  let count = 0;
+
+                  return function () {
+                    count += 1;
+                    return count;
+                  };
+                }
+                let counter = myCounter();
+
+                counter();
+                // 1
+                counter();
+                // 2
+
+                counter.count;
+                // undefined
+                count;
+                // undefined
+
+        4. the revealing module pattern
+            a. The Revealing Module Pattern
+                - The underlying philosophy of the Revealing Module Pattern is that, while we still maintain
+                encapsulation (as in the Module Pattern), we also reveal certain properties (and methods). The key
+                ingredients to the Revealing Module Pattern are:
+                    - An IIFE (wrapper)
+                    - The module content (variables, methods, objects, etc.)
+                    - A returned object literal
+
+                let person = (function () {
+                  let privateAge = 0;
+                  let privateName = 'Andrew';
+                  function privateAgeOneYear() {
+                    privateAge += 1;
+                    console.log(`One year has passed! Current age is ${privateAge}`);
+                  }
+                  function displayName() {
+                    console.log(`Name: ${privateName}`);
+                  }
+                  function ageOneYear() {
+                    privateAgeOneYear();
+                  }
+                  return {
+                    name: displayName,
+                    age: ageOneYear
+                  };
+                })();
+
+                - In the above snippet, the IIFE has some private data: privateAge, privateName, and privateAgeOneYear().
+                The returned object is stored in person and provides a public interface through which we can access this
+                data!
+                - Let's first check out what the returned person looks like:
+
+                {
+                    name: displayName,
+                    age: ageOneYear
+                };
+
+                - Note that the name() method reveals the otherwise private displayName() function:
+
+                console.log(person.name());
+                // 'My name is Andrew'
+
+                - However, what happens if we try to access and mutate privateName?
+
+                person.privateName = 'Richard';
+                console.log(person.name());
+                // 'My name is Andrew'
+
+                - person.name() still produces the string My name is Andrew! Why don't we see the string 'Richard' in
+                the returned string?
+                - Pay close attention to what the first line of code is actually doing: it simply adds a privateName
+                property to the person object. It has no effect on the privateName variable that exists inside the IIFE
+                itself! If we look at the person.name() function, it is using the privateName variable that exists
+                inside the IIFE. So even if we add a person.privateName property, the person.name() method doesn't ever
+                try to access it.
+                - Note that accessing displayName() directly won't be effective, either! This should come as now
+                surprise, since displayName() is just a function defined inside the IIFE (i.e., displayName() is not
+                a property in the returned object).
+            b. Benefits of the Revealing Module Pattern
+                - When writing your modules, there are a few key advantages of using the Revealing Module Pattern. For
+                one, there is clarity at the end of the module (i.e., the return statement) as to which variables or
+                methods may be accessed publicly. Modules may grow large, and this eases readability for other
+                developers who read your code.
+                - Along with clear intent of public or private data, the Revealing Module Pattern lends itself to
+                consistent syntax as well. In contrast, the normal Module Pattern may contain variables and functions
+                spread throughout the entire function body.
+                - While you can't go wrong with either approach to create private properties in your code, be sure to
+                take the time and choose which makes the most sense for your project!
 
 
-
-
-
-
-
-
+                https://github.com/sohamkamani/javascript-design-patterns-for-humans
+                https://medium.com/javascript-scene/javascript-factory-functions-vs-constructor-functions-vs-classes-2f22ceddf33e
