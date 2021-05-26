@@ -167,6 +167,13 @@ select {
     cursor: pointer;
 }
 
+#error {
+    color: darkred;
+    font-size: 1.3em;
+    font-weight: 600;
+    font-family: 'Oswald', sans-serif;
+}
+
 /* Footer */
 .fine-print {
     display: block;
